@@ -8,8 +8,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Rigidbody2D RB;
     float Hinput;
     float preFacingDirection;
-    [SerializeField] bool jump;
-    [SerializeField] float GroundCheck;
+    bool jump;
+
+    public float apexHeight = 3.5f;
+    public float apexTime = .5f;
+    float gravity;
+    float jumpvel;
+    new Vector3 velocity;
     public enum FacingDirection
     {
         left, right
@@ -18,7 +23,9 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         RB = GetComponent<Rigidbody2D>();
-    }
+        gravity = -2 * apexHeight / (apexTime * apexTime);
+        jumpvel = 2 * apexHeight / apexTime;
+            }
 
     void Update()
     {
@@ -28,11 +35,11 @@ public class PlayerController : MonoBehaviour
         {
             jump = true;
         }
-
+        transform.position += velocity * Time.deltaTime;
         // The input from the player needs to be determined and
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
-
+        JumpCal();
     }
     private void FixedUpdate()
     {
@@ -42,17 +49,30 @@ public class PlayerController : MonoBehaviour
     }
     private void MovementUpdate(Vector2 playerInput, float Speed, bool Jump)
     {
-        Vector2 Playerpos = RB.position;
-        Playerpos += playerInput * Speed * Time.deltaTime;
-        RB.position = Playerpos;
-        if (!Jump || !IsGrounded())
+        Vector2 Playerpos = new Vector2();
+        Playerpos.x += playerInput.x * Speed * Time.deltaTime;
+        velocity.x = Playerpos.x;
+        if (!Jump)
         {
             return;
         }
-
-        RB.AddForce(new Vector2(0, JumpForce), ForceMode2D.Impulse);
+        
     }
-
+    private void JumpCal()
+    {
+        if (IsGrounded() && jump)
+        {
+            velocity.y = jumpvel;
+        }else if (!IsGrounded())
+        {
+            velocity.y += gravity * Time.deltaTime;
+            velocity.y = Mathf.Max(velocity.y, -jumpvel);
+        }
+        else
+        {
+            velocity.y = 0;
+        }
+    }
     public bool IsWalking()
     {
         if (Hinput == 0)
@@ -66,7 +86,7 @@ public class PlayerController : MonoBehaviour
     {
         RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .5f);
         Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .5f);
-        if (hit.collider  != null && hit.collider.tag != "Player")
+        if (hit.collider != null && hit.collider.tag != "Player")
         {
             return true;
         }

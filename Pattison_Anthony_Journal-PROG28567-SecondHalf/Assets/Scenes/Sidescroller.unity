@@ -1704,8 +1704,8 @@ MonoBehaviour:
   MovementSpeed: 5
   JumpForce: 1.5
   RB: {fileID: 0}
-  jump: 0
-  GroundCheck: 0
+  apexHeight: 3.5
+  apexTime: 0.5
 --- !u!4 &1433354315
 Transform:
   m_ObjectHideFlags: 0
