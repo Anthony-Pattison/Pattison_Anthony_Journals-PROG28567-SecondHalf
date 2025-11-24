@@ -8,6 +8,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float JumpForce = 10;
     [SerializeField] float TerminalVelocity = -5;
     [SerializeField] Rigidbody2D RB;
+    [SerializeField] float CoyoteDesiredTime;
+    float CoyoteTime = 1;
     float Hinput;
     float preFacingDirection;
     bool jump;
@@ -31,41 +33,36 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        jump = false;
-        Hinput = Input.GetAxis("Horizontal");
-        if (Input.GetKey(KeyCode.Space))
+        
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             jump = true;
         }
-        
+        Hinput = Input.GetAxis("Horizontal");
         // The input from the player needs to be determined and
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
     }
+   
     private void FixedUpdate()
     {
         JumpCal();
-        print(velocity.y);
+        jump = false;
         Vector2 playerInput = new Vector2(Hinput, 0);
-        MovementUpdate(playerInput, MovementSpeed, jump);
+        MovementUpdate(playerInput, MovementSpeed);
         RB.position += velocity * Time.deltaTime;
-
     }
-    private void MovementUpdate(Vector2 playerInput, float Speed, bool Jump)
+    private void MovementUpdate(Vector2 playerInput, float Speed)
     {
         Vector2 Playerpos = new Vector2();
         Playerpos.x += playerInput.x * Speed;
         velocity.x = Playerpos.x;
-        if (!Jump)
-        {
-            return;
-        }
-        
     }
     private void JumpCal()
     {
         if (IsGrounded() && jump)
         {
+            CoyoteTime = CoyoteDesiredTime;
             velocity.y = jumpvel;
         }else if (!IsGrounded())
         {
@@ -74,8 +71,9 @@ public class PlayerController : MonoBehaviour
                 velocity.y = Mathf.Max(velocity.y, -jumpvel);
             }
         }
-        else
+        else 
         {
+            print($"stop falling coyote timer {CoyoteTime}");
             velocity.y = 0;
         }
     }
@@ -92,7 +90,17 @@ public class PlayerController : MonoBehaviour
     {
         RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .1f,Collider);
         Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .1f);
+
         if (hit.collider != null)
+        {
+            CoyoteTime = 0;
+            return true;
+        }
+        else
+        {
+            CoyoteTime += Time.deltaTime;
+        }
+        if (CoyoteTime < CoyoteDesiredTime)
         {
             return true;
         }
