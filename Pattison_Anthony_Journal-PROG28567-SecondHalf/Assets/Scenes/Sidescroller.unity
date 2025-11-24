@@ -357,7 +357,7 @@ GameObject:
   - component: {fileID: 1054579206}
   - component: {fileID: 1054579210}
   - component: {fileID: 1054579209}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: GroundTilemap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1746,8 +1746,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86a1ce42ea3e3dd44868493ae73ec06d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MovementSpeed: 5
+  Collider:
+    serializedVersion: 2
+    m_Bits: 64
+  MovementSpeed: 10
   JumpForce: 1.5
+  TerminalVelocity: -1.52
   RB: {fileID: 0}
   apexHeight: 3.5
   apexTime: 0.5
@@ -1856,7 +1860,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -0.0052639246, y: 0.007895708}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -1866,7 +1870,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.375, y: 1.2916666}
+  m_Size: {x: 1.421109, y: 1.3842621}
   m_EdgeRadius: 0
 --- !u!50 &1433354318
 Rigidbody2D:

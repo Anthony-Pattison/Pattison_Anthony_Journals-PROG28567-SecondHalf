@@ -3,8 +3,10 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Player Movement")]
+    [SerializeField] LayerMask Collider;
     [SerializeField] float MovementSpeed;
     [SerializeField] float JumpForce = 10;
+    [SerializeField] float TerminalVelocity = -5;
     [SerializeField] Rigidbody2D RB;
     float Hinput;
     float preFacingDirection;
@@ -14,7 +16,7 @@ public class PlayerController : MonoBehaviour
     public float apexTime = .5f;
     float gravity;
     float jumpvel;
-    new Vector3 velocity;
+    new Vector2 velocity;
     public enum FacingDirection
     {
         left, right
@@ -35,22 +37,24 @@ public class PlayerController : MonoBehaviour
         {
             jump = true;
         }
-        transform.position += velocity * Time.deltaTime;
+        
         // The input from the player needs to be determined and
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
-        JumpCal();
     }
     private void FixedUpdate()
     {
-
+        JumpCal();
+        print(velocity.y);
         Vector2 playerInput = new Vector2(Hinput, 0);
         MovementUpdate(playerInput, MovementSpeed, jump);
+        RB.position += velocity * Time.deltaTime;
+
     }
     private void MovementUpdate(Vector2 playerInput, float Speed, bool Jump)
     {
         Vector2 Playerpos = new Vector2();
-        Playerpos.x += playerInput.x * Speed * Time.deltaTime;
+        Playerpos.x += playerInput.x * Speed;
         velocity.x = Playerpos.x;
         if (!Jump)
         {
@@ -65,8 +69,10 @@ public class PlayerController : MonoBehaviour
             velocity.y = jumpvel;
         }else if (!IsGrounded())
         {
-            velocity.y += gravity * Time.deltaTime;
-            velocity.y = Mathf.Max(velocity.y, -jumpvel);
+            if (velocity.y >= TerminalVelocity) {
+                velocity.y += gravity * Time.deltaTime;
+                velocity.y = Mathf.Max(velocity.y, -jumpvel);
+            }
         }
         else
         {
@@ -84,9 +90,9 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .5f);
-        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .5f);
-        if (hit.collider != null && hit.collider.tag != "Player")
+        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .1f,Collider);
+        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .1f);
+        if (hit.collider != null)
         {
             return true;
         }
