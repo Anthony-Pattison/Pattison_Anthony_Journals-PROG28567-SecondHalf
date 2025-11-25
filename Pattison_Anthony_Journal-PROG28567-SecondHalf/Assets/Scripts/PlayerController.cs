@@ -23,7 +23,12 @@ public class PlayerController : MonoBehaviour
     {
         left, right
     }
+    public enum CharacterStates
+    {
+        Idle, Walking, Jumping, Dead
+    }
 
+    private CharacterStates state = CharacterStates.Idle;
     void Start()
     {
         RB = GetComponent<Rigidbody2D>();
@@ -50,7 +55,7 @@ public class PlayerController : MonoBehaviour
         jump = false;
         Vector2 playerInput = new Vector2(Hinput, 0);
         MovementUpdate(playerInput, MovementSpeed);
-        RB.position += velocity * Time.deltaTime;
+        RB.position += velocity * Time.fixedDeltaTime;
     }
     private void MovementUpdate(Vector2 playerInput, float Speed)
     {
@@ -67,7 +72,7 @@ public class PlayerController : MonoBehaviour
         }else if (!IsGrounded())
         {
             if (velocity.y >= TerminalVelocity) {
-                velocity.y += gravity * Time.deltaTime;
+                velocity.y += gravity * Time.fixedDeltaTime;
                 velocity.y = Mathf.Max(velocity.y, -jumpvel);
             }
         }
