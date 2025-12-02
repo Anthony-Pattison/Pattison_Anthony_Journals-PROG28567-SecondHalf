@@ -1749,12 +1749,12 @@ MonoBehaviour:
   Collider:
     serializedVersion: 2
     m_Bits: 64
-  MovementSpeed: 10
+  MovementSpeed: 5
   JumpForce: 1.5
   TerminalVelocity: -10
   RB: {fileID: 0}
   CoyoteDesiredTime: 0.5
-  apexHeight: 2.5
+  apexHeight: 3
   apexTime: 0.5
 --- !u!4 &1433354315
 Transform:
