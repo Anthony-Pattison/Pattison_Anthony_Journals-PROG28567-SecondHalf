@@ -1,3 +1,4 @@
+using System.IO.IsolatedStorage;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -43,7 +44,7 @@ public class PlayerController : MonoBehaviour
         {
             jump = true;
         }
-        Hinput = Input.GetAxis("Horizontal");
+        Hinput = Input.GetAxisRaw("Horizontal");
         // The input from the player needs to be determined and
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
@@ -54,6 +55,7 @@ public class PlayerController : MonoBehaviour
         JumpCal();
         jump = false;
         Vector2 playerInput = new Vector2(Hinput, 0);
+        WallJump(playerInput);
         MovementUpdate(playerInput, MovementSpeed);
         RB.position += velocity * Time.fixedDeltaTime;
     }
@@ -62,6 +64,15 @@ public class PlayerController : MonoBehaviour
         Vector2 Playerpos = new Vector2();
         Playerpos.x += playerInput.x * Speed;
         velocity.x = Playerpos.x;
+    }
+    private void WallJump(Vector2 PlayerInput)
+    {
+        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.right * PlayerInput.x, .7f, Collider);
+        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.right * .7f * PlayerInput.x, Color.red);
+        if (hit && !IsGrounded())
+        {
+            print($"{this.gameObject.name} is colliding with the wall");
+        }
     }
     private void JumpCal()
     {
@@ -78,7 +89,6 @@ public class PlayerController : MonoBehaviour
         }
         else 
         {
-            print($"stop falling coyote timer {CoyoteTime}");
             velocity.y = 0;
         }
     }
@@ -93,8 +103,8 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .1f,Collider);
-        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .1f);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .1f, Collider);
+        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .1f, Color.red);
 
         if (hit.collider != null)
         {
