@@ -14,7 +14,8 @@ public class PlayerController : MonoBehaviour
     float Hinput;
     float preFacingDirection;
     bool jump;
-
+    bool Dash;
+    public bool WallJumpCoolDown;
     public float apexHeight = 3.5f;
     public float apexTime = .5f;
     float gravity;
@@ -35,7 +36,7 @@ public class PlayerController : MonoBehaviour
         RB = GetComponent<Rigidbody2D>();
         gravity = -2 * apexHeight / (apexTime * apexTime);
         jumpvel = 2 * apexHeight / apexTime;
-            }
+    }
 
     void Update()
     {
@@ -43,6 +44,10 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             jump = true;
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Dash = true;
         }
         Hinput = Input.GetAxisRaw("Horizontal");
         // The input from the player needs to be determined and
@@ -52,10 +57,11 @@ public class PlayerController : MonoBehaviour
    
     private void FixedUpdate()
     {
-        JumpCal();
-        jump = false;
         Vector2 playerInput = new Vector2(Hinput, 0);
+        JumpCal();
         WallJump(playerInput);
+        jump = false;
+        Dash = false;
         MovementUpdate(playerInput, MovementSpeed);
         RB.position += velocity * Time.fixedDeltaTime;
     }
@@ -67,12 +73,23 @@ public class PlayerController : MonoBehaviour
     }
     private void WallJump(Vector2 PlayerInput)
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.right * PlayerInput.x, .7f, Collider);
-        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.right * .7f * PlayerInput.x, Color.red);
-        if (hit && !IsGrounded())
+        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, 0, 0)), Vector2.right * PlayerInput.x, 1f, Collider);
+        Debug.DrawRay(transform.position + (new Vector3(0, 0, 0)), Vector3.right * 1f * PlayerInput.x, Color.red);
+        if (hit && !IsGrounded() && jump && !WallJumpCoolDown)
         {
+            WallJumpCoolDown = true;
+            velocity.y = jumpvel;
+            velocity.x = PlayerInput.x * -3;
             print($"{this.gameObject.name} is colliding with the wall");
         }
+    }
+    private void AirDash(Vector2 PlayerInput, bool StartDash)
+    {
+        if (!Dash)
+        {
+            return;
+        }
+
     }
     private void JumpCal()
     {
@@ -105,9 +122,9 @@ public class PlayerController : MonoBehaviour
     {
         RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .1f, Collider);
         Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .1f, Color.red);
-
         if (hit.collider != null)
         {
+            WallJumpCoolDown = false;
             CoyoteTime = 0;
             return true;
         }
@@ -119,6 +136,7 @@ public class PlayerController : MonoBehaviour
         {
             return true;
         }
+
         return false;
     }
 
