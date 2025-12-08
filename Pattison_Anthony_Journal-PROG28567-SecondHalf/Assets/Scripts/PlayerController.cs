@@ -1,21 +1,35 @@
+using System.IO.IsolatedStorage;
+using System.Threading;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using static UnityEngine.GraphicsBuffer;
 
 public class PlayerController : MonoBehaviour
 {
+    [Space(10)]
     [Header("Player Movement")]
-    [SerializeField] LayerMask Collider;
     [SerializeField] float MovementSpeed;
-    [SerializeField] float JumpForce = 10;
-    [SerializeField] float TerminalVelocity = -5;
-    [SerializeField] Rigidbody2D RB;
-    [SerializeField] float CoyoteDesiredTime;
-    float CoyoteTime = 1;
     float Hinput;
-    float preFacingDirection;
-    bool jump;
+    bool Dash;
 
+    [Space(10)]
+    [Header("Player Jumping")]
+    public bool WallJumpCoolDown;
+    [SerializeField] float TerminalVelocity = -5;
+    [SerializeField] float JumpForce = 10;
+    [SerializeField] float CoyoteDesiredTime;
+    bool jump;
+    
     public float apexHeight = 3.5f;
     public float apexTime = .5f;
+    float CoyoteTime = 1;
+
+    [Header("Collider")]
+    [SerializeField] LayerMask Collider;
+    [SerializeField] Rigidbody2D RB;
+
+    float preFacingDirection;
     float gravity;
     float jumpvel;
     new Vector2 velocity;
@@ -34,7 +48,7 @@ public class PlayerController : MonoBehaviour
         RB = GetComponent<Rigidbody2D>();
         gravity = -2 * apexHeight / (apexTime * apexTime);
         jumpvel = 2 * apexHeight / apexTime;
-            }
+    }
 
     void Update()
     {
@@ -43,17 +57,25 @@ public class PlayerController : MonoBehaviour
         {
             jump = true;
         }
-        Hinput = Input.GetAxis("Horizontal");
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Dash = true;
+        }
+        Hinput = Input.GetAxisRaw("Horizontal");
         // The input from the player needs to be determined and
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
     }
-   
+    
+
     private void FixedUpdate()
     {
-        JumpCal();
-        jump = false;
         Vector2 playerInput = new Vector2(Hinput, 0);
+        JumpCal();
+        WallJump(playerInput);
+        AirDash(playerInput, Dash);
+        jump = false;
+        Dash = false;
         MovementUpdate(playerInput, MovementSpeed);
         RB.position += velocity * Time.fixedDeltaTime;
     }
@@ -62,6 +84,33 @@ public class PlayerController : MonoBehaviour
         Vector2 Playerpos = new Vector2();
         Playerpos.x += playerInput.x * Speed;
         velocity.x = Playerpos.x;
+    }
+    private void WallJump(Vector2 PlayerInput)
+    {
+        RaycastHit2D hit = Physics2D.Raycast(transform.position
+        + (new Vector3(0, 0, 0)), Vector2.right * PlayerInput.x, 1f, Collider);
+
+        Debug.DrawRay(transform.position + (new Vector3(0, 0, 0)), 
+        Vector3.right * 1f * PlayerInput.x, Color.red);
+
+        if (hit && !IsGrounded() && jump && !WallJumpCoolDown)
+        {
+            GetComponent<Animator>().SetBool("Fliping", true);
+            WallJumpCoolDown = true;
+            velocity.y = jumpvel;
+            velocity.x = PlayerInput.x * -3;
+        }
+    }
+    private void AirDash(Vector2 PlayerInput, bool StartDash)
+    {
+        float XDash = 10;
+        if (!StartDash)
+        {
+            XDash = 0;
+            return;
+        }
+        
+        RB.AddForce(new Vector2(XDash * PlayerInput.x, 0), ForceMode2D.Impulse);
     }
     private void JumpCal()
     {
@@ -78,7 +127,6 @@ public class PlayerController : MonoBehaviour
         }
         else 
         {
-            print($"stop falling coyote timer {CoyoteTime}");
             velocity.y = 0;
         }
     }
@@ -93,11 +141,12 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .1f,Collider);
-        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .1f);
-
+        RaycastHit2D hit = Physics2D.Raycast(transform.position + (new Vector3(0, -.65f, 0)), Vector2.down, .1f, Collider);
+        Debug.DrawRay(transform.position + (new Vector3(0, -.65f, 0)), Vector3.down * .1f, Color.red);
         if (hit.collider != null)
         {
+            GetComponent<Animator>().SetBool("Fliping", false);
+            WallJumpCoolDown = false;
             CoyoteTime = 0;
             return true;
         }
@@ -109,6 +158,7 @@ public class PlayerController : MonoBehaviour
         {
             return true;
         }
+
         return false;
     }
 
