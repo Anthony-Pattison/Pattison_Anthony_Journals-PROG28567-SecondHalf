@@ -1,9 +1,5 @@
-using System.IO.IsolatedStorage;
-using System.Threading;
-using UnityEditor;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using static UnityEngine.GraphicsBuffer;
 
 public class PlayerController : MonoBehaviour
 {
@@ -20,7 +16,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float JumpForce = 10;
     [SerializeField] float CoyoteDesiredTime;
     bool jump;
-    
+
     public float apexHeight = 3.5f;
     public float apexTime = .5f;
     float CoyoteTime = 1;
@@ -29,6 +25,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] LayerMask Collider;
     [SerializeField] Rigidbody2D RB;
 
+    [Space(10)]
+    [Header("Dashing")]
+    [SerializeField] float XDash;
+    [SerializeField] float timer = 1;
+    [SerializeField] TrailRenderer SP;
+    [SerializeField] float DeiredDashTime = .25f;
+    [SerializeField] bool DashRefreash = true;
+    bool running;
     float preFacingDirection;
     float gravity;
     float jumpvel;
@@ -57,7 +61,7 @@ public class PlayerController : MonoBehaviour
         {
             jump = true;
         }
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             Dash = true;
         }
@@ -73,7 +77,9 @@ public class PlayerController : MonoBehaviour
         Vector2 playerInput = new Vector2(Hinput, 0);
         JumpCal();
         WallJump(playerInput);
-        AirDash(playerInput, Dash);
+        if (Dash && !running && !DashRefreash) {
+            StartCoroutine(AirDash(playerInput, Dash, XDash, DeiredDashTime));
+        }
         jump = false;
         Dash = false;
         MovementUpdate(playerInput, MovementSpeed);
@@ -101,16 +107,23 @@ public class PlayerController : MonoBehaviour
             velocity.x = PlayerInput.x * -3;
         }
     }
-    private void AirDash(Vector2 PlayerInput, bool StartDash)
+    private IEnumerator AirDash(Vector2 PlayerInput, bool StartDash, float XDash, float timer)
     {
-        float XDash = 10;
-        if (!StartDash)
+        running = true;
+        DashRefreash = true;
+        SP.enabled = true;
+        XDash = PlayerInput.x* XDash;
+        SP.Clear();
+        while (timer > 0)
         {
-            XDash = 0;
-            return;
+            timer -= Time.fixedDeltaTime;
+            velocity.x = XDash;
+            RB.position += new Vector2(velocity.x, 0) * Time.fixedDeltaTime;
+            print($"running {velocity.x}");
+            yield return new WaitForSeconds(.01f);
         }
-        
-        RB.AddForce(new Vector2(XDash * PlayerInput.x, 0), ForceMode2D.Impulse);
+        SP.enabled = false;
+        running = false;
     }
     private void JumpCal()
     {
@@ -147,6 +160,7 @@ public class PlayerController : MonoBehaviour
         {
             GetComponent<Animator>().SetBool("Fliping", false);
             WallJumpCoolDown = false;
+            DashRefreash = false;
             CoyoteTime = 0;
             return true;
         }
